@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Build output
+dist/
+build/
+
+# Secrets — never commit these
+.env
+.env.local
+.env.production.local
+.streamlit/secrets.toml
+
+# Local data
+data/pathfinder.db
+
+# Tooling
+.pytest_cache/
+npm-debug.log
+.DS_Store
+Thumbs.db
+
+# Submission artifact (rebuild with scripts/build_zip.py)
+learning-pathfinder-source.zip
