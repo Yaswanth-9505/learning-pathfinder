@@ -22,10 +22,8 @@ from engine.recommender import (
     grade,
     hydrate_courses,
     next_actions,
-    normalize_assessment,
     public_questions,
 )
-from engine.retrieval import CourseIndex
 
 DEFAULT_MODEL = "openai/gpt-oss-120b"
 
@@ -440,11 +438,3 @@ def explain(index, learner, course_id):
         },
     }
 
-
-__all__ = [
-    "CourseIndex", "ServiceError", "acquired_skills", "active_path", "adapt",
-    "assessment_status", "build_client", "build_path_payload", "chat",
-    "complete_course", "dashboard", "explain", "generate_and_store",
-    "get_model", "get_or_create_assessment", "normalize_assessment",
-    "submit_assessment",
-]

@@ -27,18 +27,13 @@ const post = (path, body) =>
   request(path, { method: 'POST', body: JSON.stringify(body ?? {}) })
 
 export const api = {
-  health: () => request('/api/health'),
-
   extractProfile: (text) => post('/api/profile/extract', { text }),
   createLearner: (profile) => post('/api/learners', profile),
   getLearner: (id) => request(`/api/learners/${id}`),
-  updateLearner: (id, patch) =>
-    request(`/api/learners/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
 
   generatePath: (id) => post(`/api/learners/${id}/generate-path`),
   adaptPath: (id, note) => post(`/api/learners/${id}/adapt-path`, { note }),
   getPath: (id) => request(`/api/learners/${id}/path`),
-  getPathHistory: (id) => request(`/api/learners/${id}/paths`),
 
   completeCourse: (pathCourseId, completed) =>
     post(`/api/path-courses/${pathCourseId}/complete`, { completed }),
@@ -50,9 +45,7 @@ export const api = {
     post(`/api/learners/${id}/assessments/${milestoneIndex}?regenerate=${regenerate}`),
   submitAssessment: (assessmentId, answers) =>
     post(`/api/assessments/${assessmentId}/submit`, { answers }),
-  explain: (id, courseId) => request(`/api/learners/${id}/explain/${courseId}`),
 
-  getSkills: (id) => request(`/api/learners/${id}/skills`),
   addSkill: (id, skill) => post(`/api/learners/${id}/skills`, { skill }),
   removeSkill: (id, skill) =>
     request(`/api/learners/${id}/skills/${encodeURIComponent(skill)}`, { method: 'DELETE' }),

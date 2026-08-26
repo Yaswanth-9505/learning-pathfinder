@@ -40,8 +40,8 @@ Open **http://localhost:8501**. No Node, no second process.
 
 ```bash
 npm install
-pip install -r requirements.txt
-cp .env.example .env        # then set GROQ_API_KEY
+pip install -r requirements-api.txt   # includes requirements.txt
+cp .env.example .env                  # then set GROQ_API_KEY
 
 npm run dev
 ```
@@ -224,7 +224,11 @@ it fits Streamlit Cloud's model without a separate API service.
 **1. Push to GitHub.** The repo must contain `streamlit_app.py`,
 `requirements.txt` and `runtime.txt` at the root (they are).
 
-**2. Create the app.** At [share.streamlit.io](https://share.streamlit.io),
+**2. Create the app.** Streamlit Cloud installs `requirements.txt`, which
+deliberately contains only the three packages the Streamlit surface needs — the
+FastAPI stack sits in `requirements-api.txt` and is not installed there.
+
+ At [share.streamlit.io](https://share.streamlit.io),
 click *New app*, pick the repo and branch, and set the main file path to:
 
 ```
@@ -249,7 +253,7 @@ See `.streamlit/secrets.toml.example`. Never commit the real key — `.env` and
 | File | Role |
 |---|---|
 | `streamlit_app.py` | App entry point (Streamlit Cloud looks for this name) |
-| `requirements.txt` | Python dependencies |
+| `requirements.txt` | Streamlit dependencies only (3 packages) |
 | `runtime.txt` | Pins Python 3.12 |
 | `.streamlit/config.toml` | Dark theme matching the app |
 | `.streamlit/secrets.toml.example` | Template — the real file is git-ignored |

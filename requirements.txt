@@ -1,12 +1,6 @@
-# Web / API
-fastapi>=0.141.1
-uvicorn>=0.52.4
-python-multipart>=0.0.20
-pydantic>=2.13.4
-
-# Streamlit deployment entry point
+# Streamlit deployment dependencies.
+# Streamlit Community Cloud installs exactly this file, so it stays minimal —
+# the FastAPI stack lives in requirements-api.txt and is not needed here.
 streamlit>=1.62.0
-
-# LLM + config
 groq>=1.6.0
 python-dotenv>=1.0.0
