@@ -1,0 +1,15 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to Vercel (Frontend)
+        run: echo "Deploy frontend to Vercel"
+      - name: Deploy to Render (Backend)
+        run: echo "Deploy backend to Render"
