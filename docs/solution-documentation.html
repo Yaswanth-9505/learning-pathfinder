@@ -1,0 +1,1040 @@
+<title>Learning Pathfinder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    color-scheme: light;
+    --paper:      #f5f6f6;
+    --surface:    #ffffff;
+    --ink:        #14181c;
+    --ink-2:      #414b49;
+    --concrete:   #6c7674;
+    --route:      #0d6d61;
+    --route-soft: #0d6d611a;
+    --detour:     #a4442f;
+    --detour-soft:#a4442f14;
+    --rule:       #dde1e0;
+    --rule-2:     #eaeeed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper:      #111614;
+      --surface:    #171d1b;
+      --ink:        #e9edeb;
+      --ink-2:      #b9c4c1;
+      --concrete:   #8d9996;
+      --route:      #3aa899;
+      --route-soft: #3aa89921;
+      --detour:     #dd8163;
+      --detour-soft:#dd816318;
+      --rule:       #27312e;
+      --rule-2:     #1e2624;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper:      #111614;
+    --surface:    #171d1b;
+    --ink:        #e9edeb;
+    --ink-2:      #b9c4c1;
+    --concrete:   #8d9996;
+    --route:      #3aa899;
+    --route-soft: #3aa89921;
+    --detour:     #dd8163;
+    --detour-soft:#dd816318;
+    --rule:       #27312e;
+    --rule-2:     #1e2624;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+  @media (min-width: 1080px) {
+    .shell { grid-template-columns: 210px minmax(0, 1fr); gap: 56px; }
+  }
+
+  /* ---- masthead ---- */
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 2px solid var(--ink);
+    padding: 64px 0 22px;
+    margin-bottom: 44px;
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--route);
+    margin: 0 0 14px;
+  }
+  .masthead h1 {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+  }
+  .standfirst {
+    font-size: 1.13rem;
+    color: var(--ink-2);
+    max-width: 64ch;
+    margin: 0 0 26px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--concrete);
+  }
+  .meta b { color: var(--ink-2); font-weight: 600; }
+
+  /* ---- section rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1080px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 32px;
+      align-self: start;
+      max-height: calc(100vh - 64px);
+      overflow-y: auto;
+      font-family: Archivo, sans-serif;
+      font-size: 12.5px;
+      line-height: 1.45;
+      border-left: 1px solid var(--rule);
+      padding-left: 16px;
+    }
+    .rail a {
+      display: flex;
+      gap: 9px;
+      color: var(--concrete);
+      text-decoration: none;
+      padding: 5px 0;
+      transition: color .15s;
+    }
+    .rail a:hover, .rail a:focus-visible { color: var(--route); }
+    .rail .n {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      color: var(--route);
+      padding-top: 1px;
+      flex-shrink: 0;
+    }
+  }
+
+  main { grid-column: 1 / -1; min-width: 0; }
+  @media (min-width: 1080px) { main { grid-column: 2; } }
+
+  section { margin-bottom: 62px; scroll-margin-top: 24px; }
+
+  h2 {
+    font-family: Archivo, sans-serif;
+    font-weight: 600;
+    font-size: 1.62rem;
+    letter-spacing: -0.014em;
+    line-height: 1.2;
+    text-wrap: balance;
+    margin: 0 0 6px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+  }
+  h2 .n {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--route);
+    font-weight: 400;
+    flex-shrink: 0;
+  }
+  h3 {
+    font-family: Archivo, sans-serif;
+    font-weight: 600;
+    font-size: 1.06rem;
+    letter-spacing: -0.005em;
+    margin: 34px 0 8px;
+  }
+  p { margin: 0 0 16px; max-width: 68ch; }
+  main > section > p:first-of-type { margin-top: 18px; }
+
+  a { color: var(--route); }
+
+  ul, ol { max-width: 68ch; padding-left: 22px; margin: 0 0 16px; }
+  li { margin-bottom: 7px; }
+  li::marker { color: var(--concrete); }
+
+  code {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.855em;
+    background: var(--rule-2);
+    padding: 0.12em 0.36em;
+    border-radius: 3px;
+  }
+
+  strong { font-weight: 600; }
+
+  /* ---- callouts ---- */
+  .note {
+    border-left: 3px solid var(--route);
+    background: var(--route-soft);
+    padding: 15px 18px;
+    margin: 22px 0;
+    max-width: 68ch;
+    border-radius: 0 4px 4px 0;
+  }
+  .note p { margin: 0; }
+  .note .lbl {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--route);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .note.limit { border-left-color: var(--detour); background: var(--detour-soft); }
+  .note.limit .lbl { color: var(--detour); }
+
+  /* ---- tables ---- */
+  .scroll { overflow-x: auto; margin: 22px 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 480px;
+    font-family: Archivo, sans-serif;
+    font-size: 13.5px;
+  }
+  th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--concrete);
+    border-bottom: 1.5px solid var(--rule);
+    padding: 0 14px 8px 0;
+  }
+  td {
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule-2);
+    vertical-align: top;
+    color: var(--ink-2);
+  }
+  td:first-child { color: var(--ink); font-weight: 500; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+  table code { background: none; padding: 0; color: var(--ink); }
+
+  /* ---- figures ---- */
+  figure {
+    margin: 30px 0;
+    padding: 22px 20px 16px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+  figure .scroll { margin: 0; }
+  svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  figcaption {
+    font-family: Archivo, sans-serif;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--concrete);
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule-2);
+  }
+  figcaption b {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--route);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 400;
+  }
+
+  /* ---- stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 26px 0;
+  }
+  .stat { background: var(--surface); padding: 15px 16px; }
+  .stat .v {
+    font-family: Archivo, sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    display: block;
+    line-height: 1.1;
+  }
+  .stat .k {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--concrete);
+    margin-top: 5px;
+    display: block;
+  }
+
+  /* ---- status list ---- */
+  .built { list-style: none; padding: 0; max-width: 68ch; }
+  .built li {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule-2);
+    margin: 0;
+  }
+  .tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid;
+  }
+  .tag.yes { color: var(--route); border-color: var(--route); background: var(--route-soft); }
+  .tag.no  { color: var(--detour); border-color: var(--detour); background: var(--detour-soft); }
+
+  :focus-visible { outline: 2px solid var(--route); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .rail { display: none; }
+    .shell { grid-template-columns: 1fr; max-width: none; padding: 0; }
+    section { break-inside: auto; margin-bottom: 32px; }
+    h2 { break-after: avoid; }
+    figure { break-inside: avoid; border-color: #ccc; }
+    .stats { break-inside: avoid; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <p class="eyebrow">Solution Documentation</p>
+    <h1>Learning Pathfinder</h1>
+    <p class="standfirst">
+      An AI-powered personalised learning path recommender. It turns a sentence
+      about where you want to end up into a sequenced roadmap of real courses —
+      one that explains itself, tracks what you finish, and rebuilds when you
+      say it got something wrong.
+    </p>
+    <div class="meta">
+      <span><b>Stack</b> React 18 · FastAPI · SQLite · Groq</span>
+      <span><b>Model</b> openai/gpt-oss-120b</span>
+      <span><b>Retrieval</b> Okapi BM25, pure Python</span>
+    </div>
+  </header>
+
+  <nav class="rail" aria-label="Sections">
+    <a href="#problem"><span class="n">01</span><span>Problem understanding</span></a>
+    <a href="#approach"><span class="n">02</span><span>Solution approach</span></a>
+    <a href="#architecture"><span class="n">03</span><span>System architecture</span></a>
+    <a href="#techniques"><span class="n">04</span><span>AI/ML techniques</span></a>
+    <a href="#features"><span class="n">05</span><span>Features &amp; workflows</span></a>
+    <a href="#challenges"><span class="n">06</span><span>Challenges faced</span></a>
+    <a href="#status"><span class="n">07</span><span>Scope &amp; limits</span></a>
+  </nav>
+
+  <main>
+
+    <!-- ================= 01 ================= -->
+    <section id="problem">
+      <h2><span class="n">01</span> Problem understanding</h2>
+
+      <p>
+        Course discovery is a solved problem. Course <em>sequencing</em> is not.
+        A learner searching "backend engineering" gets thousands of results ranked
+        by popularity, each one a reasonable answer to "what could I watch next"
+        and none of them an answer to "what should I do first, and what after that."
+      </p>
+
+      <p>The gap has four distinct parts, and each needs a different mechanism:</p>
+
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>The gap</th><th>Why ranking alone fails</th><th>What it needs</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ordering</td>
+              <td>Relevance is symmetric; prerequisites are not. A ranker has no notion of "before".</td>
+              <td>A dependency-aware sequence</td>
+            </tr>
+            <tr>
+              <td>Starting point</td>
+              <td>Two learners with the same goal need different first steps.</td>
+              <td>A model of what they already know</td>
+            </tr>
+            <tr>
+              <td>Justification</td>
+              <td>"Because people like you watched it" is not a reason a learner can act on.</td>
+              <td>A stated rationale per item</td>
+            </tr>
+            <tr>
+              <td>Staleness</td>
+              <td>A plan fixed at signup is wrong by week three.</td>
+              <td>Re-planning from progress and feedback</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        A one-size-fits-all path fails because the same goal decomposes differently
+        depending on the starting point. "Become a backend engineer" is nine courses
+        for someone who has never opened a terminal and four for someone who already
+        ships Python. The unit of personalisation is not the course — it is the
+        <strong>gap between the learner and the goal</strong>.
+      </p>
+    </section>
+
+    <!-- ================= 02 ================= -->
+    <section id="approach">
+      <h2><span class="n">02</span> Solution approach</h2>
+
+      <p>
+        The obvious build is to ask an LLM for a learning path and render what comes
+        back. We tried that first, and it fails in a specific, disqualifying way:
+        the model invents courses. It produces plausible titles attached to providers
+        that never published them, and URLs that 404. For a recommender whose entire
+        output is "go do this thing," a fabricated resource is not a cosmetic bug.
+      </p>
+
+      <p>
+        So the system inverts the usual arrangement. The catalog is the source of
+        truth and the LLM is a curator working over it. It never supplies a course
+        fact — only selection, ordering and rationale. Anything it names that is not
+        in the catalog is dropped before it reaches the UI.
+      </p>
+
+      <figure>
+        <div class="scroll">
+          <svg viewBox="0 0 760 250" role="img" aria-label="Comparison: naive generation lets the model emit course facts directly to the user interface, while the grounded design routes selection through a catalog so only real courses can be displayed.">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+              </marker>
+              <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,0 10,5 0,10" fill="#a4442f"/>
+              </marker>
+            </defs>
+
+            <text x="0" y="14" font-family="JetBrains Mono, monospace" font-size="11" fill="#a4442f">NAIVE — model emits course facts</text>
+            <rect x="0" y="30" width="112" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="56" y="56" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="currentColor">Profile</text>
+
+            <line x1="112" y1="51" x2="176" y2="51" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)"/>
+
+            <rect x="178" y="30" width="112" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="234" y="56" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="currentColor">LLM</text>
+
+            <line x1="290" y1="51" x2="354" y2="51" stroke="#a4442f" stroke-width="1.5" marker-end="url(#ahr)"/>
+            <text x="322" y="42" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#a4442f">invents</text>
+
+            <rect x="356" y="30" width="112" height="42" rx="4" fill="none" stroke="#a4442f" stroke-width="1.5"/>
+            <text x="412" y="49" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="#a4442f">Course facts</text>
+            <text x="412" y="63" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#a4442f">titles · URLs</text>
+
+            <line x1="468" y1="51" x2="532" y2="51" stroke="#a4442f" stroke-width="1.5" marker-end="url(#ahr)"/>
+
+            <rect x="534" y="30" width="112" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="590" y="56" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="currentColor">Learner</text>
+
+            <text x="656" y="55" font-family="JetBrains Mono, monospace" font-size="10" fill="#a4442f">404s</text>
+
+            <line x1="0" y1="106" x2="760" y2="106" stroke="currentColor" stroke-width="1" opacity="0.25"/>
+
+            <text x="0" y="134" font-family="JetBrains Mono, monospace" font-size="11" fill="#0d6d61">GROUNDED — catalog is the source of truth</text>
+
+            <rect x="0" y="150" width="112" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="56" y="176" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="currentColor">Profile</text>
+
+            <line x1="112" y1="171" x2="176" y2="171" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)"/>
+
+            <rect x="178" y="150" width="112" height="42" rx="4" fill="none" stroke="#0d6d61" stroke-width="1.5"/>
+            <text x="234" y="169" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="#0d6d61">Retrieval</text>
+            <text x="234" y="183" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">BM25</text>
+
+            <rect x="178" y="212" width="112" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3"/>
+            <text x="234" y="231" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">Catalog</text>
+            <line x1="234" y1="212" x2="234" y2="194" stroke="currentColor" stroke-width="1.2" marker-end="url(#ah)"/>
+
+            <line x1="290" y1="171" x2="354" y2="171" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)"/>
+            <text x="322" y="162" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor">shortlist</text>
+
+            <rect x="356" y="150" width="112" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="412" y="169" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="currentColor">LLM</text>
+            <text x="412" y="183" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor">picks ids only</text>
+
+            <line x1="468" y1="171" x2="532" y2="171" stroke="#0d6d61" stroke-width="1.5" marker-end="url(#ah)"/>
+            <text x="500" y="162" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#0d6d61">validate</text>
+
+            <rect x="534" y="150" width="112" height="42" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="590" y="176" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12" fill="currentColor">Learner</text>
+
+            <text x="656" y="175" font-family="JetBrains Mono, monospace" font-size="10" fill="#0d6d61">real URLs</text>
+          </svg>
+        </div>
+        <figcaption>
+          <b>Figure 1 · The one edge that changes</b>
+          In the naive design the arrow carrying course facts originates at the model,
+          so nothing downstream can tell an invented course from a real one. In the
+          grounded design that arrow originates at the catalog; the model's output is
+          reduced to a list of ids, which is checkable. Everything else is identical.
+        </figcaption>
+      </figure>
+
+      <p>
+        This buys three properties that matter more than the extra moving parts cost:
+        every displayed resource is real, every recommendation can be traced to a
+        specific missing skill, and the catalog can be corrected or extended without
+        touching a prompt.
+      </p>
+    </section>
+
+    <!-- ================= 03 ================= -->
+    <section id="architecture">
+      <h2><span class="n">03</span> System architecture</h2>
+
+      <p>
+        Three tiers. A React client, a FastAPI service holding all the logic, and two
+        stores — a read-only JSON corpus and a SQLite database for everything that
+        changes. The only external dependency is the Groq inference API.
+      </p>
+
+      <figure>
+        <div class="scroll">
+          <svg viewBox="0 0 720 400" role="img" aria-label="System architecture: a React client calls a FastAPI service, which combines a BM25 index over a JSON course catalog, a skill-gap analyser, and the Groq LLM, persisting learners, paths, progress and feedback in SQLite.">
+            <defs>
+              <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+              </marker>
+              <marker id="a2t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <polygon points="0,0 10,5 0,10" fill="#0d6d61"/>
+              </marker>
+            </defs>
+
+            <!-- client tier -->
+            <text x="0" y="12" font-family="JetBrains Mono, monospace" font-size="10" fill="#6c7674">CLIENT · :5173</text>
+            <rect x="0" y="22" width="720" height="58" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="16" y="36" width="158" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"/>
+            <text x="95" y="55" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">Onboarding</text>
+            <rect x="186" y="36" width="158" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"/>
+            <text x="265" y="55" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">PathView</text>
+            <rect x="356" y="36" width="158" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"/>
+            <text x="435" y="55" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">Dashboard</text>
+            <rect x="526" y="36" width="178" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1"/>
+            <text x="615" y="55" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">Assistant</text>
+
+            <line x1="360" y1="80" x2="360" y2="116" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+            <text x="370" y="102" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#6c7674">REST / JSON</text>
+
+            <!-- api tier -->
+            <text x="0" y="132" font-family="JetBrains Mono, monospace" font-size="10" fill="#6c7674">API · :8000 — FastAPI, 25 routes</text>
+            <rect x="0" y="142" width="720" height="112" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+
+            <rect x="16" y="160" width="152" height="76" rx="3" fill="none" stroke="#0d6d61" stroke-width="1.3"/>
+            <text x="92" y="184" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="#0d6d61">BM25 index</text>
+            <text x="92" y="200" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">retrieval.py</text>
+            <text x="92" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">pure Python</text>
+
+            <rect x="184" y="160" width="152" height="76" rx="3" fill="none" stroke="#0d6d61" stroke-width="1.3"/>
+            <text x="260" y="184" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="#0d6d61">Skill gap</text>
+            <text x="260" y="200" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">14 role models</text>
+            <text x="260" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">set difference</text>
+
+            <rect x="352" y="160" width="152" height="76" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="428" y="184" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">Validator</text>
+            <text x="428" y="200" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor">recommender.py</text>
+            <text x="428" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">drops bad ids</text>
+
+            <rect x="520" y="160" width="184" height="76" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="612" y="184" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">Persistence</text>
+            <text x="612" y="200" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor">store.py</text>
+            <text x="612" y="216" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">7 tables</text>
+
+            <!-- stores -->
+            <line x1="92" y1="254" x2="92" y2="308" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+            <text x="102" y="284" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">reads</text>
+            <rect x="16" y="310" width="152" height="52" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <text x="92" y="332" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">courses.json</text>
+            <text x="92" y="348" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">61 courses · read-only</text>
+
+            <line x1="612" y1="254" x2="612" y2="308" stroke="currentColor" stroke-width="1.5" marker-end="url(#a2)"/>
+            <text x="622" y="284" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">read/write</text>
+            <rect x="536" y="310" width="168" height="52" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="620" y="332" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="currentColor">SQLite</text>
+            <text x="620" y="348" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">paths · progress · feedback</text>
+
+            <!-- external -->
+            <line x1="428" y1="254" x2="428" y2="308" stroke="#0d6d61" stroke-width="1.5" marker-end="url(#a2t)"/>
+            <text x="438" y="278" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">shortlist +</text>
+            <text x="438" y="292" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">gap → ids</text>
+            <rect x="212" y="310" width="264" height="52" rx="4" fill="none" stroke="#0d6d61" stroke-width="1.5"/>
+            <text x="344" y="332" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11.5" fill="#0d6d61">Groq — openai/gpt-oss-120b</text>
+            <text x="344" y="348" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">the only external call</text>
+
+            <text x="0" y="386" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#6c7674">Dashed = read-only corpus · Teal = the AI path · Solid = mutable state</text>
+          </svg>
+        </div>
+        <figcaption>
+          <b>Figure 2 · Component and data flow</b>
+          The model sits beside the system rather than in front of its data: it receives
+          a shortlist and a skill gap and returns ids, and every write to durable state
+          passes through the validator first.
+        </figcaption>
+      </figure>
+
+      <h3>Two surfaces, one core</h3>
+      <p>
+        The application ships two front ends over the same logic. A React and
+        FastAPI pair gives the full-fidelity UI plus a REST API; a Streamlit app
+        gives a single-process build that deploys to Streamlit Community Cloud in
+        one click. Both call <code>engine/service.py</code> directly, so neither
+        owns business rules and the two cannot drift into different behaviour.
+        The engine itself is pure standard library — no framework imports at all
+        — which is what made the second surface cheap to add rather than a
+        rewrite.
+      </p>
+
+      <h3>Data model</h3>
+      <p>
+        Seven tables. Paths are versioned rather than mutated — adapting a path writes
+        a new version and deactivates the old one, so the history of how someone's plan
+        evolved stays intact and is auditable.
+      </p>
+
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Table</th><th>Holds</th><th>Notable</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>learners</code></td><td>Profile, level, goals, weekly hours</td><td>—</td></tr>
+            <tr><td><code>paths</code></td><td>Generated roadmap, milestones, frozen skill gap</td><td>Versioned; <code>adapted_from</code> self-reference</td></tr>
+            <tr><td><code>path_courses</code></td><td>Ordered courses, reason, project, completion</td><td>Reason stored per course, not regenerated</td></tr>
+            <tr><td><code>learner_skills</code></td><td>Acquired skills</td><td>Auto-credited on completion; unique per learner</td></tr>
+            <tr><td><code>feedback</code></td><td>Signals and comments</td><td>Feeds the next generation</td></tr>
+            <tr><td><code>assessments</code></td><td>Milestone checkpoints and their question sets</td><td>One per milestone; answer key never leaves the server</td></tr>
+            <tr><td><code>assessment_attempts</code></td><td>Scored attempts</td><td>Best attempt decides skill credit</td></tr>
+            <tr><td><code>chat_messages</code></td><td>Assistant history</td><td>Last 6 turns re-injected as context</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 04 ================= -->
+    <section id="techniques">
+      <h2><span class="n">04</span> AI/ML techniques</h2>
+
+      <p>
+        Six stages run on every generation. Three are classical information retrieval
+        and set logic; two are LLM calls; one is deterministic validation. The split
+        is deliberate — anything that can be computed reliably is computed, and the
+        model is reserved for the judgement calls that genuinely need it.
+      </p>
+
+      <figure>
+        <div class="scroll">
+          <svg viewBox="0 0 720 210" role="img" aria-label="Six-stage generation pipeline: profile extraction by LLM, role matching, skill gap by set difference, BM25 retrieval, LLM curation, and deterministic validation before persistence.">
+            <defs>
+              <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+              </marker>
+            </defs>
+
+            <text x="0" y="12" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#0d6d61">■ LLM stage</text>
+            <text x="86" y="12" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#6c7674">□ deterministic stage</text>
+
+            <!-- stage boxes -->
+            <rect x="0" y="30" width="106" height="62" rx="4" fill="none" stroke="#0d6d61" stroke-width="1.6"/>
+            <text x="53" y="49" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">01</text>
+            <text x="53" y="65" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">Extract</text>
+            <text x="53" y="80" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">profile</text>
+
+            <line x1="106" y1="61" x2="118" y2="61" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+
+            <rect x="122" y="30" width="106" height="62" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="175" y="49" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">02</text>
+            <text x="175" y="65" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">Match</text>
+            <text x="175" y="80" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">role</text>
+
+            <line x1="228" y1="61" x2="240" y2="61" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+
+            <rect x="244" y="30" width="106" height="62" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="297" y="49" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">03</text>
+            <text x="297" y="65" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">Skill gap</text>
+            <text x="297" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="#6c7674">need − have</text>
+
+            <line x1="350" y1="61" x2="362" y2="61" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+
+            <rect x="366" y="30" width="106" height="62" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="419" y="49" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">04</text>
+            <text x="419" y="65" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">Retrieve</text>
+            <text x="419" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="#6c7674">BM25 → 16</text>
+
+            <line x1="472" y1="61" x2="484" y2="61" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+
+            <rect x="488" y="30" width="106" height="62" rx="4" fill="none" stroke="#0d6d61" stroke-width="1.6"/>
+            <text x="541" y="49" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">05</text>
+            <text x="541" y="65" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">Curate</text>
+            <text x="541" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="#6c7674">order + reason</text>
+
+            <line x1="594" y1="61" x2="606" y2="61" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+
+            <rect x="610" y="30" width="106" height="62" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <text x="663" y="49" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">06</text>
+            <text x="663" y="65" text-anchor="middle" font-family="Archivo, sans-serif" font-size="11" fill="currentColor">Validate</text>
+            <text x="663" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="#6c7674">+ persist</text>
+
+            <!-- feedback loop -->
+            <path d="M 663 92 L 663 150 L 297 150 L 297 128" fill="none" stroke="#0d6d61" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#a3)" color="#0d6d61"/>
+            <rect x="222" y="128" width="150" height="34" rx="4" fill="none" stroke="#0d6d61" stroke-width="1.3"/>
+            <text x="297" y="149" text-anchor="middle" font-family="Archivo, sans-serif" font-size="10.5" fill="#0d6d61">completions + feedback</text>
+            <text x="480" y="145" font-family="JetBrains Mono, monospace" font-size="9" fill="#0d6d61">re-enters at stage 03</text>
+
+            <text x="0" y="185" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">Adaptation is the same pipeline with a larger "have" set and feedback in the stage-05 prompt.</text>
+            <text x="0" y="200" font-family="JetBrains Mono, monospace" font-size="9" fill="#6c7674">No retraining — the loop closes through data, not weights.</text>
+          </svg>
+        </div>
+        <figcaption>
+          <b>Figure 3 · Generation pipeline and the adaptation loop</b>
+          Progress and feedback re-enter at the skill-gap stage, which is why finishing
+          a course visibly moves the gap and why a "too hard" signal changes what the
+          next version contains.
+        </figcaption>
+      </figure>
+
+      <h3>Retrieval — Okapi BM25</h3>
+      <p>
+        Candidate selection is BM25 (<code>k₁ = 1.5</code>, <code>b = 0.75</code>) over
+        a field-weighted document built per course: title and skills at weight 3,
+        domains at 2, description and provider at 1. Query terms come from the goal
+        (repeated, as the strongest signal), interests, and the missing skills.
+      </p>
+      <p>
+        Experience level biases rather than filters — a course one level away is scaled
+        by 0.85, two levels by 0.72 — so a beginner can still be handed one stretch
+        course when it is genuinely the right next step, instead of being walled into
+        a beginner-only ghetto.
+      </p>
+
+      <div class="note">
+        <span class="lbl">Why not embeddings</span>
+        <p>
+          A sentence-transformer would add a multi-hundred-megabyte download and a
+          warm-up cost to rank a 61-document corpus, and Groq serves no embedding
+          model, so it would mean a second provider. At this corpus size lexical
+          ranking is competitive, starts instantly, and — unlike a vector score — the
+          ranking is inspectable term by term when a result looks wrong.
+        </p>
+      </div>
+
+      <h3>Skill-gap analysis</h3>
+      <p>
+        Fourteen target roles each carry a required-skill set. The learner's goal is
+        matched to a role by alias-token overlap; their known skills are extracted from
+        free text by whole-token matching against the catalog's 238-skill vocabulary
+        and unioned with skills auto-credited from completed courses. The gap is the
+        set difference, and coverage is its complement — the number the dashboard leads
+        with.
+      </p>
+
+      <h3>LLM usage</h3>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Call</th><th>Job</th><th class="num">Budget</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Profile extraction</td><td>Free text → typed profile, JSON mode</td><td class="num">1,200</td></tr>
+            <tr><td>Path curation</td><td>Select, order, justify from the shortlist</td><td class="num">3,000</td></tr>
+            <tr><td>Assistant</td><td>Answer grounded in the stored path</td><td class="num">1,200</td></tr>
+            <tr><td>Checkpoint</td><td>5 application-level MCQs for a finished stage</td><td class="num">2,600</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The curation call returns ids and rationale only, never course metadata. That
+        keeps the response small enough to fit the free tier's token ceiling and makes
+        every field checkable against the catalog.
+      </p>
+
+      <h3>Deterministic post-processing</h3>
+      <p>
+        Prerequisites are <em>derived</em>, not requested: course B depends on earlier
+        course A when A teaches a skill B builds on. Asking the model for prerequisites
+        risks a graph that contradicts its own ordering; computing them from the
+        ordering makes that class of inconsistency impossible. Validation also drops
+        unknown ids, de-duplicates, clamps milestone indices into range, and backfills
+        from retrieval rank if the model returns fewer than six courses.
+      </p>
+    </section>
+
+    <!-- ================= 05 ================= -->
+    <section id="features">
+      <h2><span class="n">05</span> Key features and workflows</h2>
+
+      <div class="stats">
+        <div class="stat"><span class="v">61</span><span class="k">Courses</span></div>
+        <div class="stat"><span class="v">14</span><span class="k">Target roles</span></div>
+        <div class="stat"><span class="v">238</span><span class="k">Skills</span></div>
+        <div class="stat"><span class="v">28</span><span class="k">API routes</span></div>
+        <div class="stat"><span class="v">46</span><span class="k">Tests</span></div>
+        <div class="stat"><span class="v">~3s</span><span class="k">Generation</span></div>
+      </div>
+
+      <h3>The primary workflow</h3>
+      <ol>
+        <li>
+          <strong>Describe the goal in natural language.</strong> The learner types a
+          sentence; the system extracts name, goal, interests, level, prior knowledge
+          and available hours, then shows the parse back for correction. Getting it
+          wrong is cheap — the profile is editable before anything is generated.
+        </li>
+        <li>
+          <strong>See the gap before the plan.</strong> The matched role and its
+          missing skills are shown at review time, so the learner understands what the
+          path is going to be built to close.
+        </li>
+        <li>
+          <strong>Generate.</strong> Retrieval, gap analysis and curation produce a
+          roadmap grouped into milestones. Each course carries a rationale written for
+          this learner, its derived prerequisites, and a concrete project.
+        </li>
+        <li>
+          <strong>Work and complete.</strong> Ticking a course credits its skills
+          automatically; coverage, milestone bars, hours and the estimated finish date
+          all recompute from that single fact.
+        </li>
+        <li>
+          <strong>Prove it.</strong> Finishing every course in a stage unlocks that
+          stage's checkpoint: five application-level multiple-choice questions
+          generated from the courses actually taken. Grading happens server-side and
+          the answer key is never sent to the browser. Passing at 70% credits the
+          stage's skills with an <code>assessment:</code> source, so the dashboard
+          can distinguish demonstrated skills from self-reported ones.
+        </li>
+        <li>
+          <strong>Disagree.</strong> Rate any course too hard, too easy, not relevant
+          or helpful.
+        </li>
+        <li>
+          <strong>Adapt.</strong> Rebuilding re-runs the pipeline with the enlarged
+          skill set and the feedback in the prompt, writing a new version.
+        </li>
+      </ol>
+
+      <div class="note">
+        <span class="lbl">Observed adaptation</span>
+        <p>
+          On a backend-engineer profile with two courses completed, a
+          <code>too_hard</code> signal on System Design Primer and a
+          <code>not_relevant</code> on the DevOps course produced a v2 that dropped
+          both flagged courses <em>and</em> both completed ones, and added FastAPI and
+          API Design in their place — a shift from an infrastructure-weighted path to
+          an API-weighted one.
+        </p>
+      </div>
+
+      <h3>Explainability</h3>
+      <p>
+        Every recommendation answers "why me, why now." The rationale is written at
+        generation time and stored, so it never drifts. A dedicated endpoint returns
+        the structured version: the skills the course closes, its position in the
+        sequence, what it builds on, and the retrieval basis for the match. The
+        assistant reads the same stored rationale, so its explanation and the card's
+        explanation cannot disagree.
+      </p>
+
+      <h3>Dashboard</h3>
+      <p>
+        Coverage leads as a hero figure, with courses, hours, weeks remaining and skill
+        coverage as a KPI row beneath. Milestone bars are direct-labelled with counts
+        and paired with icons, so state never rests on colour alone; a table view is
+        available for the same data. Chart colours were validated against the
+        application's own dark surface rather than assumed.
+      </p>
+    </section>
+
+    <!-- ================= 06 ================= -->
+    <section id="challenges">
+      <h2><span class="n">06</span> Challenges faced</h2>
+
+      <h3>The model invented courses</h3>
+      <p>
+        The first working version asked the LLM to produce the whole path. It returned
+        confident, well-structured JSON containing courses that do not exist. This is
+        the failure that drove the entire architecture: the catalog became the source
+        of truth and the model's output was reduced to ids that can be checked. The
+        validator that drops unknown ids is covered by a test that feeds it a
+        deliberately fabricated id.
+      </p>
+
+      <h3>A hard 8,000 token-per-minute ceiling</h3>
+      <p>
+        The free tier caps at 8,000 tokens/minute across all models. An early attempt
+        at a 8,000-token completion budget failed with HTTP 413 before generating
+        anything. Two changes brought it inside the envelope: the curation call returns
+        ids rather than full course records, cutting output by roughly two-thirds, and
+        candidates are serialised compactly at sixteen courses. Generation now runs at
+        about 4,000 tokens end to end. The ceiling remains a real product constraint,
+        not just a tuning detail — it caps the system at roughly one generation per
+        minute for one user.
+      </p>
+
+      <h3>A silent substring bug in skill extraction</h3>
+      <p>
+        Skill matching originally used a naive substring test, which read the skill
+        <code>c</code> out of the word "basi<b>c</b>" — so a learner writing "basic
+        Python" was credited with C. It was invisible in the UI and only surfaced when
+        the extracted skill list was printed during testing. The fix was whole-token
+        matching with padded boundaries for multi-word skills; the regression is now
+        pinned by a named test.
+      </p>
+
+      <h3>The assessment generator was trivially gameable</h3>
+      <p>
+        The first working checkpoint looked excellent — application-level questions
+        with plausible distractors, grounded in the right courses. Then the stored
+        answer key read <code>[0, 0, 0, 0, 0]</code>. The model has a strong position
+        bias and had put the correct option first in every single question, so
+        answering "A" to everything scored 100% without reading a word. Nothing in
+        the UI would have revealed this. Options are now shuffled server-side after
+        generation, seeded from the question text so a given question always lays out
+        the same way, with <code>answer_index</code> remapped to follow the correct
+        option. A test asserts that a fixed all-A submission fails.
+      </p>
+
+      <h3>Truncation looked like malformed JSON</h3>
+      <p>
+        Hitting the token limit mid-generation produced an unterminated string, which
+        surfaced as a JSON parse error and sent debugging in the wrong direction. The
+        pipeline now checks <code>finish_reason == "length"</code> explicitly and
+        raises a message naming the real cause.
+      </p>
+
+      <h3>Adding Streamlit broke FastAPI</h3>
+      <p>
+        Installing Streamlit pulled <code>starlette</code> to 1.6.0, which the
+        pinned <code>fastapi==0.104.1</code> cannot work with — every route
+        registration died on <code>Router.__init__() got an unexpected keyword
+        argument 'on_startup'</code>. The same dependency-rot failure mode as the
+        Groq SDK below, surfacing a second time from a different direction.
+        Resolved by moving the whole web stack to current releases
+        (FastAPI 0.141, Pydantic 2.13) rather than pinning Streamlit backwards.
+      </p>
+
+      <h3>Dependency rot in a two-year-old scaffold</h3>
+      <p>
+        The starting scaffold pinned <code>groq==0.4.2</code>, which crashes on import
+        against modern <code>httpx</code> because the <code>proxies</code> argument was
+        removed. The originally configured model, <code>mixtral-8x7b-32768</code>, had
+        been decommissioned by the provider and returned HTTP 400 on every call. The
+        frontend used Create-React-App's <code>process.env</code> under Vite, which
+        throws <code>ReferenceError</code> in the browser and white-screened the app,
+        and a missing <code>postcss.config.js</code> meant no Tailwind class ever
+        compiled. Each was independently fatal and none produced a message pointing at
+        its own cause.
+      </p>
+    </section>
+
+    <!-- ================= 07 ================= -->
+    <section id="status">
+      <h2><span class="n">07</span> Scope and limits</h2>
+
+      <p>Measured against the brief, this is what exists and what does not:</p>
+
+      <ul class="built">
+        <li><span class="tag yes">Built</span><span>Conversational natural-language intake with an editable parse</span></li>
+        <li><span class="tag yes">Built</span><span>Learner profiling: interests, level, prior learning, goals, capacity</span></li>
+        <li><span class="tag yes">Built</span><span>Recommendation engine over courses, projects and resources</span></li>
+        <li><span class="tag yes">Built</span><span>Path generator with derived prerequisites and milestones</span></li>
+        <li><span class="tag yes">Built</span><span>Assistant that explains recommendations and answers questions</span></li>
+        <li><span class="tag yes">Built</span><span>Dashboard: progress, skill development, milestones, next actions</span></li>
+        <li><span class="tag yes">Built</span><span>Feedback capture and path adaptation with version history</span></li>
+        <li><span class="tag yes">Built</span><span>Milestone checkpoint assessments with server-side grading and evidence-based skill credit</span></li>
+        <li><span class="tag no">Not built</span><span>Authentication — learner id lives in <code>localStorage</code></span></li>
+        <li><span class="tag yes">Built</span><span>Streamlit deployment path — single-process entry point, theme, secrets and runtime pin</span></li>
+      </ul>
+
+      <div class="note limit">
+        <span class="lbl">Honest constraints</span>
+        <p>
+          The catalog is <strong>curated, not crawled</strong> — 61 courses across 26
+          domains, chosen so every skill each role requires is taught by something. A
+          goal far outside those domains degrades to weak retrieval rather than a
+          confident wrong answer, but it degrades. There is <strong>no
+          authentication</strong>, so anyone holding a learner id can read that
+          learner's data; this must not be deployed publicly as-is. On Streamlit
+          Community Cloud the container filesystem is <strong>ephemeral</strong>,
+          so the SQLite file is wiped on reboot, redeploy or sleep, taking every
+          learner and path with it — <code>engine/store.py</code> is the only file
+          that would change to move to hosted Postgres, but until that happens a
+          deployed instance is a demo, not a product. And the free-tier
+          token ceiling makes concurrent use impossible without a paid plan.
+          Checkpoints are <strong>multiple-choice only</strong> — they test whether a
+          learner recognises the right approach, not whether they can build the thing.
+          The per-course projects address that, but nothing verifies a project was
+          actually completed.
+        </p>
+      </div>
+
+      <h3>What the next iteration needs</h3>
+      <p>
+        In priority order: authentication, which is the precondition for deploying at
+        all; richer assessment formats — the current multiple-choice checkpoints
+        cannot evaluate a submitted project, which is where the real evidence of
+        skill lives; and catalog expansion via provider APIs, at which point
+        the retrieval stage would likely need a vector index alongside BM25 — the
+        lexical-only tradeoff above is defensible at 61 documents and would not be at
+        6,000.
+      </p>
+    </section>
+
+  </main>
+</div>
