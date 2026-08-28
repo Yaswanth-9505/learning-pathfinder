@@ -7,6 +7,7 @@ and no second copy of the business logic: this file is presentation only.
 Run locally:   streamlit run streamlit_app.py
 """
 
+import hmac
 import os
 
 import streamlit as st
@@ -29,15 +30,51 @@ st.set_page_config(
 
 # -- bootstrap --------------------------------------------------------------
 
-def get_api_key():
-    """Streamlit Cloud supplies secrets; local dev uses .env."""
+def _secret(name):
+    """Read a setting from Streamlit secrets, falling back to the environment."""
     try:
-        if "GROQ_API_KEY" in st.secrets:
-            return st.secrets["GROQ_API_KEY"]
+        if name in st.secrets:
+            return st.secrets[name]
     except Exception:
         # No secrets.toml present at all — fall through to the environment.
         pass
-    return os.getenv("GROQ_API_KEY")
+    return os.getenv(name)
+
+
+def get_api_key():
+    """Streamlit Cloud supplies secrets; local dev uses .env."""
+    return _secret("GROQ_API_KEY")
+
+
+def require_access():
+    """Gate the whole app behind a shared access code, when one is configured.
+
+    This is an access gate, not per-user authentication. It stops strangers
+    opening a public deployment; it does not isolate learners from each other.
+    Anyone holding the code sees everything, which is why the learner roster is
+    still opt-in separately.
+
+    With APP_ACCESS_CODE unset the app runs open, so local development and the
+    test suite are unaffected.
+    """
+    expected = _secret("APP_ACCESS_CODE")
+    if not expected:
+        return True
+    if st.session_state.get("_access_ok"):
+        return True
+
+    st.title("🧭 Learning Pathfinder")
+    st.caption("This deployment is access-controlled. Enter the access code to continue.")
+    entered = st.text_input("Access code", type="password", key="_access_input")
+
+    if entered:
+        # Constant-time compare so the check does not leak the code by timing.
+        if hmac.compare_digest(str(entered), str(expected)):
+            st.session_state["_access_ok"] = True
+            st.rerun()
+        else:
+            st.error("That code is not correct.")
+    return False
 
 
 @st.cache_resource(show_spinner=False)
@@ -66,6 +103,9 @@ if not API_KEY:
         "`GROQ_API_KEY = \"gsk_...\"`\n\n"
         "Get a free key at [console.groq.com/keys](https://console.groq.com/keys)."
     )
+    st.stop()
+
+if not require_access():
     st.stop()
 
 ensure_db()

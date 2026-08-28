@@ -137,3 +137,76 @@ def test_checkpoint_tab_reports_locked_stages(app):
     app.session_state["learner_id"] = learner_id
     app.run()
     assert not app.exception, [str(e) for e in app.exception]
+
+
+# -- access gate ------------------------------------------------------------
+
+def test_no_gate_when_access_code_is_unset(app, monkeypatch):
+    """Local development and CI must be unaffected by the gate."""
+    monkeypatch.delenv("APP_ACCESS_CODE", raising=False)
+    app.run()
+    assert not app.exception
+    # Reaches the normal onboarding screen rather than a code prompt.
+    assert len(app.text_area) >= 1
+
+
+def test_gate_blocks_when_access_code_is_set(tmp_path, monkeypatch):
+    monkeypatch.setattr(store, "DB_PATH", tmp_path / "app.db")
+    monkeypatch.setenv("PATHFINDER_DB", str(tmp_path / "app.db"))
+    monkeypatch.setenv("GROQ_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("APP_ACCESS_CODE", "let-me-in")
+    store.init_db()
+
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.run()
+    assert not at.exception
+    # Only the code prompt is rendered; the app itself never builds.
+    assert len(at.text_input) == 1
+    assert at.text_input[0].label == "Access code"
+    assert len(at.tabs) == 0
+
+
+def test_gate_rejects_a_wrong_code(tmp_path, monkeypatch):
+    monkeypatch.setattr(store, "DB_PATH", tmp_path / "app.db")
+    monkeypatch.setenv("PATHFINDER_DB", str(tmp_path / "app.db"))
+    monkeypatch.setenv("GROQ_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("APP_ACCESS_CODE", "let-me-in")
+    store.init_db()
+
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.run()
+    at.text_input[0].set_value("wrong").run()
+    assert not at.exception
+    assert any("not correct" in e.value for e in at.error)
+    assert len(at.tabs) == 0
+
+
+def test_gate_admits_the_correct_code(tmp_path, monkeypatch):
+    monkeypatch.setattr(store, "DB_PATH", tmp_path / "app.db")
+    monkeypatch.setenv("PATHFINDER_DB", str(tmp_path / "app.db"))
+    monkeypatch.setenv("GROQ_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("APP_ACCESS_CODE", "let-me-in")
+    store.init_db()
+
+    at = AppTest.from_file(APP, default_timeout=30)
+    at.run()
+    at.text_input[0].set_value("let-me-in").run()
+    assert not at.exception
+    # AppTest's session_state proxy has no .get(), so index it directly.
+    assert at.session_state["_access_ok"] is True
+    # And the gated app is now reachable.
+    assert len(at.text_input) != 1 or at.text_input[0].label != "Access code"
+
+
+def test_learner_roster_is_hidden_by_default(app, monkeypatch):
+    """Regression: the start screen used to list every learner's name and goal."""
+    monkeypatch.delenv("PATHFINDER_SHOW_LEARNERS", raising=False)
+    store.create_learner({"name": "Ada Private", "goals": "become a backend engineer"})
+    app.run()
+    assert not app.exception
+    rendered = " ".join(
+        [str(e.label) for e in app.expander]
+        + [m.value for m in app.markdown]
+        + [c.value for c in app.caption]
+    )
+    assert "Ada Private" not in rendered

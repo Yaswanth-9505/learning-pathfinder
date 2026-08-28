@@ -53,7 +53,7 @@ npm run dev
 | API docs | http://localhost:8000/docs |
 
 Prerequisites for Option A are Python only. Run the tests with
-`npm test` or `pytest -q` (55 tests, no API key or network required).
+`npm test` or `pytest -q` (60 tests, no API key or network required).
 
 ---
 
@@ -191,7 +191,8 @@ Set in `.env`:
 | `GROQ_MODEL` | `openai/gpt-oss-120b` | Any Groq text model |
 | `ALLOWED_ORIGINS` | `http://localhost:5173,...` | CORS allowlist (FastAPI only) |
 | `PATHFINDER_DB` | `data/pathfinder.db` | SQLite location; point at a volume in production |
-| `PATHFINDER_SHOW_LEARNERS` | unset | Set to `1` to list existing learners on the start screen. Off by default: with no authentication, a public deployment would otherwise expose every learner's name and goal. |
+| `PATHFINDER_SHOW_LEARNERS` | unset | Set to `1` to list existing learners on the start screen. Off by default: a public deployment would otherwise expose every learner's name and goal. |
+| `APP_ACCESS_CODE` | unset | Shared access code for the Streamlit app. Unset means open access. A gate, not per-user login. |
 
 The frontend reads `VITE_API_URL` (default `http://localhost:8000`).
 
@@ -302,9 +303,16 @@ To fix it properly, point `PATHFINDER_DB` at a mounted volume or migrate
 `engine/store.py` to a hosted Postgres — the schema is plain SQL and the store
 module is the only file that would change.
 
-**There is still no authentication.** Every visitor to the deployed URL sees the
-same learner list and can open any profile. Do not put real personal data in a
-public deployment.
+**Access control is a gate, not a login.** Setting `APP_ACCESS_CODE` in secrets
+puts the whole Streamlit app behind a shared code, which is enough to stop
+strangers opening a public URL. It is deliberately not per-user authentication:
+everyone holding the code sees every learner, which is why the learner roster is
+separately opt-in via `PATHFINDER_SHOW_LEARNERS`. Do not put real personal data
+in a public deployment.
+
+The **FastAPI surface has no gate at all** and its learner ids are sequential
+integers, so `/api/learners/1`, `/2`, `/3` enumerate everyone. That surface is
+intended for local use; do not expose it publicly without adding real auth.
 
 **The free Groq tier caps at 8,000 tokens/minute account-wide.** A public URL
 means strangers share that budget, so two people generating paths at once will
