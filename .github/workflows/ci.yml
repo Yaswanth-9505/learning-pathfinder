@@ -25,6 +25,9 @@ jobs:
         # No API key needed: the suite is offline by design.
         run: pytest tests/ -q
 
+      - name: Report recommendation-quality metrics
+        run: python eval/evaluate.py
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"

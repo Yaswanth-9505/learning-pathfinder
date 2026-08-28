@@ -114,9 +114,12 @@ narrate what the system is doing (see the script) or cut the dead air in editing
 **Switch to the Dashboard tab.**
 
 > "And everything here is *derived*, not self-declared. Progress comes from what
-> I actually completed. Watch the skill coverage — it moved from 15% to 38%
-> because finishing those courses closed real gaps. Milestones, hours, and the
-> estimated finish date all recompute from that one fact."
+> I actually completed. Watch the skill coverage — it jumped, because finishing
+> those courses closed real gaps. Milestones, hours, and the estimated finish
+> date all recompute from that one fact."
+
+*(Read the two coverage figures off your own screen — don't quote numbers from
+a different run.)*
 
 **Switch to the Checkpoints tab.**
 

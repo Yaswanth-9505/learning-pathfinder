@@ -53,7 +53,7 @@ npm run dev
 | API docs | http://localhost:8000/docs |
 
 Prerequisites for Option A are Python only. Run the tests with
-`npm test` or `pytest -q` (46 tests, no API key or network required).
+`npm test` or `pytest -q` (55 tests, no API key or network required).
 
 ---
 
@@ -105,7 +105,7 @@ every title, provider and URL you see is genuine.
 | Profile extraction | LLM structured extraction (JSON mode) | `engine/recommender.py` |
 | Role matching | Alias-token overlap against 14 role profiles | `engine/retrieval.py` |
 | Skill gap | Set difference: role skills − learner skills | `engine/retrieval.py` |
-| Candidate retrieval | **Okapi BM25**, weighted fields, level-biased | `engine/retrieval.py` |
+| Candidate retrieval | **Okapi BM25**, weighted fields, level- and style-biased | `engine/retrieval.py` |
 | Curation & ordering | LLM over the retrieved shortlist (RAG) | `engine/recommender.py` |
 | Validation | Catalog id check, dedupe, clamp, backfill | `engine/recommender.py` |
 | Prerequisites | Derived from ordering ∩ skill overlap | `engine/recommender.py` |
@@ -140,8 +140,12 @@ data/
   courses.json          61-course catalog (real courses and URLs)
   roles.json            14 target-role skill profiles
   pathfinder.db         created on first run
-tests/test_engine.py    39 engine tests
-tests/test_streamlit_app.py  7 Streamlit render tests (AppTest)
+eval/
+  goldens.json          12 labelled goals, 87 relevance judgements
+  evaluate.py           IR metrics vs 3 baselines, offline
+tests/test_engine.py         39 engine tests
+tests/test_streamlit_app.py   7 Streamlit render tests (AppTest)
+tests/test_evaluation.py      9 recommendation-quality guards
 docs/
   solution-documentation.html/.pdf   Solution documentation
   demo-script.md                     Demo video script and shot list
@@ -187,6 +191,7 @@ Set in `.env`:
 | `GROQ_MODEL` | `openai/gpt-oss-120b` | Any Groq text model |
 | `ALLOWED_ORIGINS` | `http://localhost:5173,...` | CORS allowlist (FastAPI only) |
 | `PATHFINDER_DB` | `data/pathfinder.db` | SQLite location; point at a volume in production |
+| `PATHFINDER_SHOW_LEARNERS` | unset | Set to `1` to list existing learners on the start screen. Off by default: with no authentication, a public deployment would otherwise expose every learner's name and goal. |
 
 The frontend reads `VITE_API_URL` (default `http://localhost:8000`).
 
@@ -213,6 +218,35 @@ Add an entry to `data/courses.json` — it is indexed on next start, no retraini
 
 `tests/test_engine.py::test_every_role_skill_is_teachable` guards that every
 skill a role requires is taught by at least one course.
+
+---
+
+## Evaluation
+
+Retrieval quality is measured, not asserted. `eval/goldens.json` holds 12
+labelled goals with 87 relevance judgements; `eval/evaluate.py` scores the
+ranker against three baselines and runs offline with no API key:
+
+```bash
+python eval/evaluate.py --detail
+```
+
+| Method | R@5 | R@10 | **R@16** | P@10 | nDCG@10 | MRR | SkillCov@16 |
+|---|---|---|---|---|---|---|---|
+| **BM25 (ours)** | 0.626 | 0.831 | **0.921** | 0.558 | 0.869 | 1.000 | 0.985 |
+| title-match | 0.220 | 0.301 | 0.375 | 0.208 | 0.355 | 0.696 | 0.516 |
+| catalog order | 0.041 | 0.146 | 0.221 | 0.117 | 0.126 | 0.217 | 0.321 |
+| random (5 seeds) | 0.083 | 0.174 | 0.270 | 0.127 | 0.155 | 0.282 | 0.469 |
+
+**Recall@16 is the number that matters** — 16 is the shortlist size the LLM
+receives, so it caps what any generated path can possibly contain. At 0.921 it
+is 3.4x the random floor. **MRR 1.000** means the top-ranked course is relevant
+for every labelled goal. **SkillCov@16 0.985** is the product metric: the
+shortlist covers 98.5% of the skills the target role requires, so the gap the
+path is built to close is nearly always coverable.
+
+These thresholds are pinned by `tests/test_evaluation.py`, so a change that
+degrades ranking fails CI rather than surfacing in a demo.
 
 ---
 

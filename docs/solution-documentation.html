@@ -804,6 +804,64 @@
         every field checkable against the catalog.
       </p>
 
+      <h3>Does it actually recommend well?</h3>
+      <p>
+        A pipeline description is not evidence. Retrieval is therefore measured
+        against a labelled set: 12 goals with 87 human relevance judgements
+        (<code>eval/goldens.json</code>), scored offline with no API key so the
+        numbers are reproducible by anyone who clones the repo.
+      </p>
+
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Method</th><th class="num">R@5</th><th class="num">R@10</th>
+                <th class="num">R@16</th><th class="num">nDCG@10</th>
+                <th class="num">MRR</th><th class="num">SkillCov@16</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>BM25 (ours)</td><td class="num">0.626</td><td class="num">0.831</td>
+                <td class="num">0.921</td><td class="num">0.869</td>
+                <td class="num">1.000</td><td class="num">0.985</td></tr>
+            <tr><td>title-match</td><td class="num">0.220</td><td class="num">0.301</td>
+                <td class="num">0.375</td><td class="num">0.355</td>
+                <td class="num">0.696</td><td class="num">0.516</td></tr>
+            <tr><td>catalog order</td><td class="num">0.041</td><td class="num">0.146</td>
+                <td class="num">0.221</td><td class="num">0.126</td>
+                <td class="num">0.217</td><td class="num">0.321</td></tr>
+            <tr><td>random (5 seeds)</td><td class="num">0.083</td><td class="num">0.174</td>
+                <td class="num">0.270</td><td class="num">0.155</td>
+                <td class="num">0.282</td><td class="num">0.469</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        <strong>Recall@16 is the metric that matters.</strong> Sixteen is the
+        shortlist the LLM receives, so it is a hard ceiling on what any generated
+        path can contain - a course missed here can never appear in a roadmap no
+        matter how good the prompt is. At 0.921 it runs 3.4x the random floor and
+        2.5x a title-matching baseline.
+      </p>
+      <p>
+        <strong>MRR of 1.000</strong> means the top-ranked course is relevant for
+        every labelled goal. <strong>SkillCov@16 of 0.985</strong> is the product
+        metric rather than the IR one: the shortlist teaches 98.5% of the skills
+        the matched role requires, so the gap the path exists to close is almost
+        always closable from the candidates on offer.
+      </p>
+
+      <div class="note">
+        <span class="lbl">Guarded, not just measured</span>
+        <p>
+          These thresholds are asserted in <code>tests/test_evaluation.py</code>
+          and run in CI. A change to tokenizing, field weights or the BM25
+          constants that quietly degrades ranking fails the build instead of
+          surfacing during a demo. One test checks the worst individual goal, not
+          just the mean, because an average hides a single catastrophic query.
+        </p>
+      </div>
+
       <h3>Deterministic post-processing</h3>
       <p>
         Prerequisites are <em>derived</em>, not requested: course B depends on earlier
@@ -824,8 +882,8 @@
         <div class="stat"><span class="v">14</span><span class="k">Target roles</span></div>
         <div class="stat"><span class="v">238</span><span class="k">Skills</span></div>
         <div class="stat"><span class="v">28</span><span class="k">API routes</span></div>
-        <div class="stat"><span class="v">46</span><span class="k">Tests</span></div>
-        <div class="stat"><span class="v">~3s</span><span class="k">Generation</span></div>
+        <div class="stat"><span class="v">55</span><span class="k">Tests</span></div>
+        <div class="stat"><span class="v">0.92</span><span class="k">Recall@16</span></div>
       </div>
 
       <h3>The primary workflow</h3>
@@ -1010,7 +1068,10 @@
           goal far outside those domains degrades to weak retrieval rather than a
           confident wrong answer, but it degrades. There is <strong>no
           authentication</strong>, so anyone holding a learner id can read that
-          learner's data; this must not be deployed publicly as-is. On Streamlit
+          learner's data; this must not be deployed publicly as-is. The start
+          screen's learner roster is therefore off by default
+          (<code>PATHFINDER_SHOW_LEARNERS</code>), since listing it on an
+          unauthenticated public URL would expose every learner's name and goal. On Streamlit
           Community Cloud the container filesystem is <strong>ephemeral</strong>,
           so the SQLite file is wiped on reboot, redeploy or sleep, taking every
           learner and path with it — <code>engine/store.py</code> is the only file
