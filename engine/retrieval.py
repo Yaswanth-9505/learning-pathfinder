@@ -131,40 +131,82 @@ class CourseIndex:
         """Turn a learner profile into a retrieval query.
 
         Goals are repeated because they are the strongest signal for what the
-        learner is actually trying to reach.
+        learner is actually trying to reach. The learning style contributes the
+        matching catalog `format` tokens once - enough to break ties toward the
+        preferred delivery mode without letting format outrank subject matter.
         """
         goals = profile.get("goals", "")
         interests = profile.get("interests", "")
         target_skills = " ".join(self.role_skills(goals))
-        return " ".join([goals, goals, interests, target_skills]).strip()
+        formats = " ".join(self.style_formats(profile.get("learning_style", "")))
+        return " ".join([goals, goals, interests, target_skills, formats]).strip()
+
+    def style_formats(self, learning_style):
+        """Map a stated learning style onto the catalog's `format` vocabulary.
+
+        The catalog tags each course with how it is delivered; without this the
+        learner's stated preference never reaches ranking at all.
+        """
+        if not learning_style:
+            return []
+        text = learning_style.lower()
+        mapping = {
+            "hands-on": ["hands", "on", "projects", "assignments"],
+            "practical": ["hands", "on", "projects"],
+            "project": ["projects", "hands", "on"],
+            "video": ["video"],
+            "visual": ["video"],
+            "watching": ["video"],
+            "reading": ["reading"],
+            "text": ["reading"],
+            "self-paced": ["reading", "hands", "on"],
+        }
+        for key, formats in mapping.items():
+            if key in text:
+                return formats
+        return []
+
+    def _best_role(self, goal_text):
+        """Highest alias-overlap role for a goal.
+
+        Ties are broken by alias specificity rather than catalog order: 'data
+        analyst', 'data scientist' and 'data engineer' all share the token
+        'data', so a bare max-overlap scan would bind to whichever happened to
+        be listed first.
+        """
+        tokens = set(tokenize(goal_text))
+        if not tokens:
+            return None
+
+        scored = []
+        for role in self.roles:
+            best_for_role = 0.0
+            for alias in role["aliases"]:
+                alias_tokens = set(tokenize(alias))
+                if not alias_tokens:
+                    continue
+                overlap = len(tokens & alias_tokens)
+                if not overlap:
+                    continue
+                # Reward matching a larger share of the alias, so a two-token
+                # alias fully matched beats a longer alias matched on one token.
+                best_for_role = max(best_for_role, overlap + overlap / len(alias_tokens))
+            if best_for_role:
+                scored.append((best_for_role, role))
+
+        if not scored:
+            return None
+        scored.sort(key=lambda pair: pair[0], reverse=True)
+        return scored[0][1]
 
     def role_skills(self, goal_text):
         """Match a free-text goal to the skill set of a known target role."""
-        tokens = set(tokenize(goal_text))
-        if not tokens:
-            return []
-        best, best_overlap = None, 0
-        for role in self.roles:
-            aliases = set()
-            for alias in role["aliases"]:
-                aliases.update(tokenize(alias))
-            overlap = len(tokens & aliases)
-            if overlap > best_overlap:
-                best, best_overlap = role, overlap
-        return best["skills"] if best else []
+        role = self._best_role(goal_text)
+        return role["skills"] if role else []
 
     def match_role(self, goal_text):
         """Return the matched role record, or None."""
-        tokens = set(tokenize(goal_text))
-        best, best_overlap = None, 0
-        for role in self.roles:
-            aliases = set()
-            for alias in role["aliases"]:
-                aliases.update(tokenize(alias))
-            overlap = len(tokens & aliases)
-            if overlap > best_overlap:
-                best, best_overlap = role, overlap
-        return best
+        return self._best_role(goal_text)
 
     def normalize_skills(self, text):
         """Extract known catalog skills mentioned in free text.
