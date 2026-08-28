@@ -87,7 +87,7 @@ export default function Assessment({ status, learnerId, onPassed }) {
             <p className="text-xs text-slate-400">
               {result.passed
                 ? 'Passed. Skills credited to your profile.'
-                : `Needs ${result.pass_mark}% to pass. Review and try again.`}
+                : `Needs ${result.required_correct} of ${result.total} correct. Review and try again.`}
             </p>
           </div>
         </div>
@@ -157,10 +157,15 @@ export default function Assessment({ status, learnerId, onPassed }) {
     return (
       <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-            <ClipboardCheck className="w-4 h-4 text-blue-400" />
-            {quiz.title}
-          </h4>
+          <div>
+            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-blue-400" />
+              {quiz.title}
+            </h4>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {quiz.required_correct} of {quiz.questions.length} correct to pass
+            </p>
+          </div>
           <span className="text-xs text-slate-500 tabular-nums">
             {answered}/{quiz.questions.length} answered
           </span>
@@ -242,7 +247,7 @@ export default function Assessment({ status, learnerId, onPassed }) {
               {status.passed
                 ? `Best score ${status.best_percent}% — skills credited.`
                 : status.best_percent !== null
-                ? `Best so far ${status.best_percent}%, needs ${status.pass_mark}%.`
+                ? `Best so far ${status.best_percent}%.`
                 : 'Prove you can apply what this stage taught.'}
             </p>
           </div>

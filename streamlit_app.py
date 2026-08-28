@@ -114,7 +114,11 @@ def render_onboarding():
         "real courses that explains every step."
     )
 
-    existing = store.list_learners()
+    # Listing every learner leaks names and goals to anyone who opens a public
+    # deployment. There is no authentication, so the roster is opt-in and off
+    # by default; set PATHFINDER_SHOW_LEARNERS=1 for local or single-user use.
+    existing = (store.list_learners()
+                if os.getenv("PATHFINDER_SHOW_LEARNERS") == "1" else [])
     if existing:
         with st.expander("Continue as an existing learner"):
             for learner in existing[:10]:
@@ -367,7 +371,7 @@ def render_checkpoints(learner):
             if status["best_percent"] is not None:
                 st.caption(
                     f"Best score {status['best_percent']}% over "
-                    f"{status['attempts']} attempt(s) · pass mark {status['pass_mark']}%"
+                    f"{status['attempts']} attempt(s)"
                 )
 
             render_quiz(learner, status)
@@ -397,6 +401,9 @@ def render_quiz(learner, status):
 
     quiz = st.session_state[key]
     st.markdown(f"**{quiz['title']}**")
+    st.caption(
+        f"{quiz['required_correct']} of {len(quiz['questions'])} correct to pass."
+    )
 
     answers = []
     for q_index, question in enumerate(quiz["questions"]):
@@ -438,7 +445,8 @@ def render_quiz_result(result, key, result_key):
     else:
         st.warning(
             f"**{result['score']}/{result['total']} ({result['percent']}%)** — "
-            f"needs {result['pass_mark']}% to pass. Review and try again."
+            f"needs {result['required_correct']} of {result['total']} correct. "
+            "Review and try again."
         )
 
     for item in result["results"]:

@@ -11,6 +11,7 @@ implementation of the rules, and stops the two surfaces from drifting apart.
 """
 
 import json
+import math
 import os
 
 from engine import store
@@ -249,6 +250,18 @@ def assessment_status(index, learner_id):
     return out
 
 
+def required_correct(total, pass_mark):
+    """How many answers must be right to clear the pass mark.
+
+    A percentage alone misleads on short quizzes: with 5 questions the only
+    reachable scores are 0/20/40/60/80/100, so a "70% pass mark" really means
+    4 of 5. Callers show this count instead of the raw percentage.
+    """
+    if not total:
+        return 0
+    return min(total, math.ceil(total * pass_mark / 100))
+
+
 def get_or_create_assessment(client, index, learner, milestone_index,
                              regenerate=False):
     """Return a milestone checkpoint, generating it if needed.
@@ -265,11 +278,13 @@ def get_or_create_assessment(client, index, learner, milestone_index,
 
     existing = store.get_assessment_for_milestone(path["id"], milestone_index)
     if existing and not regenerate:
+        questions = json.loads(existing["questions"])
         return {
             "assessment_id": existing["id"],
             "title": existing["title"],
             "pass_mark": existing["pass_mark"],
-            "questions": public_questions(json.loads(existing["questions"])),
+            "required_correct": required_correct(len(questions), existing["pass_mark"]),
+            "questions": public_questions(questions),
         }
 
     courses = [c for c in hydrate_courses(index, store.get_path_courses(path["id"]))
@@ -302,6 +317,7 @@ def get_or_create_assessment(client, index, learner, milestone_index,
         "assessment_id": assessment_id,
         "title": built["title"],
         "pass_mark": 70,
+        "required_correct": required_correct(len(built["questions"]), 70),
         "questions": public_questions(built["questions"]),
     }
 
@@ -331,8 +347,9 @@ def submit_assessment(assessment_id, answers):
 
     return {
         "score": score, "total": total, "percent": percent, "passed": passed,
-        "pass_mark": assessment["pass_mark"], "results": results,
-        "skills_credited": credited,
+        "pass_mark": assessment["pass_mark"],
+        "required_correct": required_correct(total, assessment["pass_mark"]),
+        "results": results, "skills_credited": credited,
     }
 
 
