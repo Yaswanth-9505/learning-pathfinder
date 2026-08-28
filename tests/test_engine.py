@@ -352,6 +352,80 @@ def test_one_assessment_per_milestone(db):
     assert db.get_assessment_for_milestone(pid, 0)["title"] == "Regenerated"
 
 
+# -- skill credit and revocation --------------------------------------------
+
+def _index_and_learner(db):
+    from engine.retrieval import CourseIndex
+    ix = CourseIndex()
+    lid = db.create_learner({"name": "T", "goals": "backend engineer"})
+    return ix, lid
+
+
+def test_completing_credits_skills_and_uncompleting_withdraws_them(db):
+    from engine import service
+    ix, lid = _index_and_learner(db)
+    pid = db.save_path(lid, {"path_name": "p", "milestones": ["A"]},
+                       [{"course_id": "linux-journey", "milestone_index": 0}])
+    row = db.get_path_courses(pid)[0]
+    taught = set(ix.by_id["linux-journey"]["skills"])
+
+    service.complete_course(ix, row["id"], True)
+    assert taught <= set(service.acquired_skills(lid))
+
+    service.complete_course(ix, row["id"], False)
+    assert not (taught & set(service.acquired_skills(lid))),         "un-completing must withdraw skills this course was sole evidence for"
+
+
+def test_uncompleting_keeps_skills_another_finished_course_also_teaches(db):
+    from engine import service
+    ix, lid = _index_and_learner(db)
+    # git-pro and github-skills both teach "git".
+    pid = db.save_path(lid, {"path_name": "p", "milestones": ["A"]},
+                       [{"course_id": "git-pro", "milestone_index": 0},
+                        {"course_id": "github-skills", "milestone_index": 0}])
+    rows = db.get_path_courses(pid)
+    service.complete_course(ix, rows[0]["id"], True)
+    service.complete_course(ix, rows[1]["id"], True)
+    assert "git" in service.acquired_skills(lid)
+
+    service.complete_course(ix, rows[0]["id"], False)
+    assert "git" in service.acquired_skills(lid),         "the other completed course still evidences this skill"
+
+
+def test_uncompleting_never_revokes_a_manually_logged_skill(db):
+    from engine import service
+    ix, lid = _index_and_learner(db)
+    pid = db.save_path(lid, {"path_name": "p", "milestones": ["A"]},
+                       [{"course_id": "linux-journey", "milestone_index": 0}])
+    row = db.get_path_courses(pid)[0]
+
+    db.add_skill(lid, "linux", source="manual")
+    service.complete_course(ix, row["id"], True)
+    service.complete_course(ix, row["id"], False)
+    assert "linux" in service.acquired_skills(lid),         "a hand-logged skill is not this course's to revoke"
+
+
+def test_uncompleting_never_revokes_an_assessment_proven_skill(db):
+    from engine import service
+    ix, lid = _index_and_learner(db)
+    pid = db.save_path(lid, {"path_name": "p", "milestones": ["A"]},
+                       [{"course_id": "linux-journey", "milestone_index": 0}])
+    row = db.get_path_courses(pid)[0]
+
+    db.add_skill(lid, "linux", source="assessment:1")
+    service.complete_course(ix, row["id"], True)
+    service.complete_course(ix, row["id"], False)
+    assert "linux" in service.acquired_skills(lid),         "checkpoint evidence outranks a course checkbox"
+
+
+def test_completed_course_ids_spans_path_versions(db):
+    ix, lid = _index_and_learner(db)
+    p1 = db.save_path(lid, {"path_name": "v1"}, [{"course_id": "git-pro"}])
+    db.set_course_completed(db.get_path_courses(p1)[0]["id"], True)
+    db.save_path(lid, {"path_name": "v2"}, [{"course_id": "fastapi-docs"}])
+    assert "git-pro" in db.completed_course_ids(lid),         "evidence from a superseded version still counts"
+
+
 # -- persistence ------------------------------------------------------------
 
 def test_learner_roundtrip(db):

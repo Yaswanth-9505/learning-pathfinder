@@ -13,7 +13,17 @@ async function request(path, options = {}) {
     try {
       const body = await response.json()
       if (body?.detail) {
-        detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+        if (typeof body.detail === 'string') {
+          detail = body.detail
+        } else if (Array.isArray(body.detail)) {
+          // FastAPI returns validation failures as a list of objects; show the
+          // messages rather than dumping raw JSON at the user.
+          detail = body.detail
+            .map((e) => (e?.msg ? e.msg : JSON.stringify(e)))
+            .join('; ')
+        } else {
+          detail = JSON.stringify(body.detail)
+        }
       }
     } catch {
       // response had no JSON body; keep the status-based message

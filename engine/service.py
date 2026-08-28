@@ -138,17 +138,39 @@ def adapt(client, index, learner, note=""):
 
 
 def complete_course(index, path_course_id, completed=True):
-    """Mark a course done and credit its skills to the learner."""
+    """Mark a course done, and keep credited skills in step with the evidence.
+
+    Completing credits the course's skills. Un-completing withdraws them again,
+    but only the ones this course was the sole evidence for: a skill the learner
+    logged by hand, proved in a checkpoint, or also earned from another finished
+    course stays put. Without this, ticking and unticking a course inflates
+    skill coverage permanently.
+    """
     row = store.set_course_completed(path_course_id, completed)
     if row is None:
         raise ServiceError("Course entry not found.")
 
     path = store.get_path(row["path_id"])
+    learner_id = path["learner_id"]
     course = index.by_id.get(row["course_id"])
-    if completed and course:
+    source = "course:%s" % row["course_id"]
+
+    if course and completed:
         for skill in course["skills"]:
-            store.add_skill(path["learner_id"], skill,
-                            source="course:%s" % course["id"])
+            store.add_skill(learner_id, skill, source=source)
+    elif course:
+        # Skills still evidenced by any other completed course, in any version.
+        still_taught = set()
+        for other_id in store.completed_course_ids(learner_id):
+            if other_id == course["id"]:
+                continue
+            other = index.by_id.get(other_id)
+            if other:
+                still_taught.update(other["skills"])
+        for skill in course["skills"]:
+            if skill not in still_taught:
+                store.remove_skill_by_source(learner_id, skill, source)
+
     return build_path_payload(index, path)
 
 

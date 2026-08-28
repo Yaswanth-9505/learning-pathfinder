@@ -334,6 +334,37 @@ def remove_skill(learner_id, skill):
         )
 
 
+def remove_skill_by_source(learner_id, skill, source):
+    """Drop a skill only if it was credited by this specific source.
+
+    Un-completing a course must not revoke a skill the learner logged manually
+    or proved in a checkpoint, so the delete is scoped to the crediting source.
+    """
+    with connect() as conn:
+        conn.execute(
+            "DELETE FROM learner_skills "
+            "WHERE learner_id = ? AND skill = ? AND source = ?",
+            (learner_id, skill.strip().lower(), source),
+        )
+
+
+def completed_course_ids(learner_id):
+    """Every course the learner has completed, across all path versions.
+
+    Adaptation writes a new path version, so evidence from an older version
+    still counts - checking only the active path would revoke skills the
+    learner genuinely earned.
+    """
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT pc.course_id FROM path_courses pc "
+            "JOIN paths p ON p.id = pc.path_id "
+            "WHERE p.learner_id = ? AND pc.completed = 1",
+            (learner_id,),
+        ).fetchall()
+    return {r["course_id"] for r in rows}
+
+
 # -- feedback ---------------------------------------------------------------
 
 def add_feedback(learner_id, signal, path_id=None, course_id=None, comment=""):
