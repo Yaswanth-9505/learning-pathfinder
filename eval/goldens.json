@@ -1,0 +1,90 @@
+{
+  "_about": "Relevance judgements for retrieval evaluation. For each goal, `relevant` lists catalog course ids a domain-literate reviewer would accept as on-target for that goal. Labels are binary and deliberately generous at the edges (a supporting fundamentals course counts) because the retrieval stage feeds a shortlist, not a final answer - its job is recall, and the LLM curation stage does the precision work downstream.",
+  "queries": [
+    {
+      "goal": "become a backend engineer",
+      "learning_style": "hands-on",
+      "level": "beginner",
+      "relevant": ["fastapi-docs", "flask-mega", "django-tutorial", "sqlalchemy",
+                   "pg-tutorial", "db-design", "sql-mode", "rest-api-design",
+                   "auth-oauth", "docker-getstarted", "git-pro", "testing-py",
+                   "linux-journey", "sys-design-primer", "nodejs-guide"]
+    },
+    {
+      "goal": "become a data scientist",
+      "learning_style": "video",
+      "level": "beginner",
+      "relevant": ["ml-andrew-ng", "kaggle-pandas", "kaggle-ml", "stat-thinking",
+                   "linear-algebra", "data-viz", "sql-mode", "py-4-everybody",
+                   "fcc-python"]
+    },
+    {
+      "goal": "frontend developer role",
+      "learning_style": "hands-on",
+      "level": "beginner",
+      "relevant": ["fcc-responsive", "js-info", "react-docs", "ts-handbook",
+                   "web-dev-mdn", "fcc-js-algos", "refactoring-ui", "fullstackopen"]
+    },
+    {
+      "goal": "machine learning engineer",
+      "learning_style": "hands-on",
+      "level": "intermediate",
+      "relevant": ["ml-andrew-ng", "dl-specialization", "fastai", "nlp-hf",
+                   "mlops-zoomcamp", "kaggle-ml", "linear-algebra", "stat-thinking",
+                   "docker-getstarted"]
+    },
+    {
+      "goal": "devops engineer",
+      "learning_style": "hands-on",
+      "level": "intermediate",
+      "relevant": ["docker-getstarted", "k8s-basics", "devops-cicd", "aws-cloud-prac",
+                   "linux-journey", "git-pro", "github-skills", "missing-semester"]
+    },
+    {
+      "goal": "data engineer building pipelines",
+      "learning_style": "hands-on",
+      "level": "intermediate",
+      "relevant": ["data-eng-zoomcamp", "spark-guide", "sql-mode", "pg-tutorial",
+                   "db-design", "docker-getstarted", "py-4-everybody", "ddia"]
+    },
+    {
+      "goal": "mobile app developer",
+      "learning_style": "hands-on",
+      "level": "beginner",
+      "relevant": ["flutter-docs", "android-basics", "react-native"]
+    },
+    {
+      "goal": "ux designer",
+      "learning_style": "video",
+      "level": "beginner",
+      "relevant": ["google-ux", "figma-learn", "refactoring-ui"]
+    },
+    {
+      "goal": "cyber security analyst",
+      "learning_style": "hands-on",
+      "level": "beginner",
+      "relevant": ["cyber-fundamentals", "owasp-top10", "linux-journey"]
+    },
+    {
+      "goal": "full stack web developer",
+      "learning_style": "hands-on",
+      "level": "intermediate",
+      "relevant": ["fullstackopen", "react-docs", "nodejs-guide", "js-info",
+                   "ts-handbook", "fcc-responsive", "sql-mode", "web-dev-mdn"]
+    },
+    {
+      "goal": "data analyst using sql and dashboards",
+      "learning_style": "video",
+      "level": "beginner",
+      "relevant": ["sql-mode", "excel-analytics", "tableau-basics", "data-viz",
+                   "kaggle-pandas", "stat-thinking"]
+    },
+    {
+      "goal": "software engineer strong in algorithms",
+      "learning_style": "hands-on",
+      "level": "beginner",
+      "relevant": ["cs50x", "algos-princeton", "neetcode", "fcc-js-algos",
+                   "git-pro", "missing-semester", "testing-py"]
+    }
+  ]
+}
