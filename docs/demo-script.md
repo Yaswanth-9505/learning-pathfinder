@@ -6,6 +6,12 @@
 window, no split terminal. Use the React UI instead if you want the richer
 visuals; the beats are identical.
 
+**Record against a local run, not the hosted app** at
+<https://learning-pathfinder.streamlit.app/>. Local gives you a clean database
+on demand and your full Groq quota; the hosted instance shares one free-tier
+budget and can wipe its data mid-session. Show the live URL on screen at the
+end instead.
+
 ---
 
 ## Before you record

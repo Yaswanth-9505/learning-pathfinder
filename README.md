@@ -4,13 +4,22 @@
 plain English; get a sequenced roadmap of real courses, with an explanation for
 every recommendation, progress tracking, and a path that adapts to your feedback.
 
+**Live app: <https://learning-pathfinder.streamlit.app/>** — no setup required.
+Source: <https://github.com/Yaswanth-9505/learning-pathfinder>
+
+> Note on the hosted instance: it runs on Streamlit Community Cloud, whose
+> filesystem is ephemeral, so learners and progress are wiped when the app
+> sleeps or redeploys. It also shares one free-tier Groq quota (8,000
+> tokens/minute) across everyone using it. Both are fine for a demo and wrong
+> for real use — see [Deployment caveats](#deployment-caveats--read-these).
+
 ---
 
 ## Two ways to run it
 
 | Surface | Entry point | Use for |
 |---|---|---|
-| **Streamlit** | `streamlit_app.py` | One-command local run, and one-click cloud deployment |
+| **Streamlit** | `streamlit_app.py` | One-command local run, and the [hosted deployment](https://learning-pathfinder.streamlit.app/) |
 | **React + FastAPI** | `npm run dev` | The full-fidelity UI, and a REST API for other clients |
 
 Both call the same `engine/service.py`, so behaviour is identical — there is no
@@ -53,7 +62,7 @@ npm run dev
 | API docs | http://localhost:8000/docs |
 
 Prerequisites for Option A are Python only. Run the tests with
-`npm test` or `pytest -q` (60 tests, no API key or network required).
+`npm test` or `pytest -q` (65 tests, no API key or network required).
 
 ---
 
@@ -121,7 +130,7 @@ and the ranking is inspectable.
 
 ```
 streamlit_app.py        Streamlit entry point (deployment target)
-backend.py              FastAPI app: 28 routes (thin transport)
+backend.py              FastAPI app: 24 routes (thin transport)
 api.js                  Frontend API client
 frontend.jsx            App shell, tab routing, session restore
 main.jsx / App.jsx      React entry points
@@ -143,8 +152,8 @@ data/
 eval/
   goldens.json          12 labelled goals, 87 relevance judgements
   evaluate.py           IR metrics vs 3 baselines, offline
-tests/test_engine.py         39 engine tests
-tests/test_streamlit_app.py   7 Streamlit render tests (AppTest)
+tests/test_engine.py         44 engine tests
+tests/test_streamlit_app.py  12 Streamlit render tests (AppTest)
 tests/test_evaluation.py      9 recommendation-quality guards
 docs/
   solution-documentation.html/.pdf   Solution documentation
@@ -173,7 +182,7 @@ scripts/build_zip.py    Submission packaging
 | POST | `/api/learners/{id}/assessments/{i}` | Generate a stage checkpoint |
 | POST | `/api/assessments/{id}/submit` | Grade an attempt, credit skills |
 | GET | `/api/learners/{id}/explain/{course_id}` | Why this course |
-| GET/POST | `/api/learners/{id}/skills` | Skill log |
+| GET/POST/DELETE | `/api/learners/{id}/skills` | Skill log; DELETE removes one self-reported skill |
 | GET/POST | `/api/learners/{id}/feedback` | Feedback signals |
 | GET/POST | `/api/learners/{id}/chat` | Assistant + history |
 
@@ -252,6 +261,10 @@ degrades ranking fails CI rather than surfacing in a demo.
 ---
 
 ## Deploying to Streamlit Community Cloud
+
+**A live instance is already deployed at
+<https://learning-pathfinder.streamlit.app/>.** The steps below are what
+produced it, and what you would repeat to run your own copy.
 
 The Streamlit surface is the deployable one — it is a single Python process, so
 it fits Streamlit Cloud's model without a separate API service.
